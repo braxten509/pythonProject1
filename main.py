@@ -25,7 +25,7 @@ player_cords = [0, 0]
 previous_x = 0
 previous_y = 0
 
-player_coins = 0
+player_coins = [0]
 
 # Image paths
 tree_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\tree.png").convert()
@@ -58,13 +58,13 @@ def draw_text(font, font_size, text, color, cord_x, cord_y):
 
 def draw_coin(cord_x, cord_y, value, used):
 
-    if not used:
+    if used != True:
 
         screen.blit(coin_image_1, (cord_x*grid_size, cord_y*grid_size))
 
         if player_cords[0] == cord_x and player_cords[1] == cord_y:
 
-            player_coins += value
+            player_coins[0] += value
 
             used = True
 
@@ -89,6 +89,10 @@ def draw_obstacle(cord_x, cord_y, image_path):
         player_cords[0] -= 1
 
 
+# Object maps
+coin_map = [draw_coin(4, 4, 10, False)]
+
+
 running = True
 
 while running:
@@ -106,7 +110,7 @@ while running:
     draw_coin(4, 4, 10, False)
 
     # Text
-    draw_text(font_1, 60, str(player_coins), (255, 255, 255), 1.8, 19.7)
+    draw_text(font_1, 60, str(player_coins[0]), (255, 255, 255), 1.8, 19.7)
 
     # Draw player
     draw_image(player_cords[0], player_cords[1], player_image)
