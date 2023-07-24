@@ -21,9 +21,7 @@ pygame.display.set_caption('Heroes Game')
 
 font_1 = "chalkduster.ttf"
 
-# Player stats
-pickedUp = []
-discovered = [bool]
+discovered = bool
 
 # x, y
 player_cords = [0, 0]
@@ -32,7 +30,7 @@ previous_y = 0
 
 player_coins = [0]
 
-obj_coins = []
+object_array = []
 
 
 
@@ -93,56 +91,71 @@ def draw_text(font, font_size, text, color, cord_x, cord_y):
     screen.blit(text_description, text_rect)
 
 
-def draw_coin(self, cord_x, cord_y, value, obj_num):
+class Coin:
 
-    appended = bool
+    def __init__(self, cord_x, cord_y, value):
+        self.cord_x = cord_x
+        self.cord_y = cord_y
+        self.value = value
 
-    if appended != True:
-        pickedUp.append(bool)
+    def __eq__(self, other):
+        return self.cord_x == other.cord_x and self.cord_y == other.cord_y and self.value == other.value
 
-    if pickedUp[obj_num] != True:
+    def __repr__(self):
+        return f"`{self.cord_x, self.cord_y, self.value}`"
 
-        screen.blit(coin_image_1, (cord_x*grid_size, cord_y*grid_size))
+    def draw(self):
 
-        if player_cords[0] == cord_x and player_cords[1] == cord_y:
+        screen.blit(coin_image_1, (self.cord_x*grid_size, self.cord_y*grid_size))
 
-            player_coins[0] += value
+        if player_cords[0] == self.cord_x and player_cords[1] == self.cord_y:
 
+            player_coins[0] += self.value
 
-
-def draw_obstacle(cord_x, cord_y, image_path):
-    screen.blit(image_path, (cord_x*grid_size, cord_y*grid_size))
-
-    if player_cords[0] == cord_x and player_cords[1] == cord_y and previous_x == cord_x and previous_y == cord_y + 1:
-
-        player_cords[1] += 1
-
-    elif player_cords[0] == cord_x and player_cords[1] == cord_y and previous_x == cord_x and previous_y == cord_y - 1:
-
-        player_cords[1] -= 1
-
-    elif player_cords[0] == cord_x and player_cords[1] == cord_y and previous_x == cord_x + 1 and previous_y == cord_y:
-
-        player_cords[0] += 1
-
-    elif player_cords[0] == cord_x and player_cords[1] == cord_y and previous_x == cord_x - 1 and previous_y == cord_y:
-
-        player_cords[0] -= 1
+            object_array.remove(Coin(self.cord_x, self.cord_y, self.value))
 
 
-obj_coins.append(
-    GenericObject(2, 2, 10, coin_image_1)
-)
+class Obstacle:
+
+    def __init__(self, cord_x, cord_y, image_path):
+        self.cord_x = cord_x
+        self.cord_y = cord_y
+        self.image_path = image_path
+
+    def draw(self):
+        screen.blit(self.image_path, (self.cord_x*grid_size, self.cord_y*grid_size))
+
+        if player_cords[0] == self.cord_x and player_cords[1] == self.cord_y and previous_x == self.cord_x and previous_y == self.cord_y + 1:
+
+            player_cords[1] += 1
+
+        elif player_cords[0] == self.cord_x and player_cords[1] == self.cord_y and previous_x == self.cord_x and previous_y == self.cord_y - 1:
+
+            player_cords[1] -= 1
+
+        elif player_cords[0] == self.cord_x and player_cords[1] == self.cord_y and previous_x == self.cord_x + 1 and previous_y == self.cord_y:
+
+            player_cords[0] += 1
+
+        elif player_cords[0] == self.cord_x and player_cords[1] == self.cord_y and previous_x == self.cord_x - 1 and previous_y == self.cord_y:
+
+            player_cords[0] -= 1
 
 
-# Object maps
-# coin_map = [draw_coin(4, 4, 10)]
+object_array = [
+    Obstacle(2, 2, bush_image_1),
+    Coin(3, 3, 10),
+    Coin(5, 3, 10)
+]
 
 mixer.music.load("C:\\Users\\braxt\\Desktop\\Desktop\\Music Catalog\\My Music\\DIRT.mp3")
 
 mixer.music.set_volume(0.5)
 
 mixer.music.play()
+
+if mixer.music.get_endevent():
+    mixer.music.play()
 
 running = True
 
@@ -152,41 +165,22 @@ while running:
     screen.fill((0, 0, 0))
 
     # Draw grid
-    for cord_x in range(0, int(screen_x / grid_size + 1)):
-        for cord_y in range(0, int(screen_y / grid_size) + 1):
-            draw_image(cord_x, cord_y, grass_image_1)
-            # draw_rect(cord_x, cord_y, grid_size, grid_size, (0, 153, 51))
+    for cord_x_grid in range(0, int(screen_x / grid_size + 1)):
+        for cord_y_grid in range(0, int(screen_y / grid_size) + 1):
+            draw_image(cord_x_grid, cord_y_grid, grass_image_1)
 
     # Draw utils
     draw_image(0, 18, util_bar_image)
-    # draw_coin(4, 4, 10, 0)
-    # draw_coin(7, 8, 20, 1)
 
-    for each in range(0, len(obj_coins)):
-        obj_coins[each].draw()
-        obj_coins[each].collision()
-        obj_coins[each].remove()
+    # Draw Objects
+    for each in range(0, len(object_array)):
+        object_array[each].draw()
 
     # Text
     draw_text(font_1, 60, str(player_coins[0]), (255, 255, 255), 1.8, 19.7)
 
     # Draw player
     draw_image(player_cords[0], player_cords[1], player_image)
-
-    # Draw obstacles
-    draw_obstacle(1, 1, bush_image_1)
-    draw_obstacle(4, 3, bush_image_1)
-    draw_obstacle(7, 2, bush_image_1)
-    draw_obstacle(1, 8, flower_image_1)
-    draw_obstacle(3, 6, flower_image_2)
-    draw_obstacle(8, 8, mushroom_image_1)
-
-    # Fog of war
-    if discovered[0] != True:
-        draw_rect(0, 10, 10 * grid_size, 8 * grid_size, (0, 0, 0))
-
-    if 0 <= player_cords[0] <= 10 <= player_cords[1] <= 18:
-        discovered[0] = True
 
     # Game Events
     for event in pygame.event.get():
