@@ -2,6 +2,8 @@ import pygame
 import random
 import sys
 
+# ADD MAP EDITOR BUTTONS NEXT AND SAVE TO FILE - THEN READ FROM FILE
+
 from pygame import mixer
 
 pygame.init()
@@ -33,41 +35,18 @@ player_coins = [0]
 object_array = []
 
 
-
 # Image paths
-mushroom_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\mushroom_1.png").convert_alpha()
-flower_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\flower_1.png").convert_alpha()
-flower_image_2 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\flower_2.png").convert_alpha()
-bush_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\bush.png").convert()
-grass_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\grass.png").convert()
-dirt_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\dirt.png").convert()
-tree_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\tree.png").convert()
-rock_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\rock.png").convert()
-coin_image_1 = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\coin.png").convert_alpha()
-player_image = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\player.png").convert()
-util_bar_image = pygame.image.load("C:\\Users\\braxt\\Desktop\\Desktop\\Coding\\python_game_1\\sprites\\util_bar.png").convert()
-
-
-class GenericObject:
-
-    def __init__(self, cord_x, cord_y, value, image):
-        self.cord_x = cord_x
-        self.cord_y = cord_y
-        self.value = value
-        self.image = image
-
-    def draw(self):
-        screen.blit(self.image, (self.cord_x * grid_size, self.cord_y * grid_size))
-
-    def collision(self):
-        if player_cords[0] == self.cord_x and player_cords[1] == self.cord_y:
-
-            player_coins[0] += self.value
-
-    def remove(self):
-        del self
-
-
+mushroom_image_1 = pygame.image.load("sprites\\mushroom_1.png").convert_alpha()
+flower_image_1 = pygame.image.load("sprites\\flower_1.png").convert_alpha()
+flower_image_2 = pygame.image.load("sprites\\flower_2.png").convert_alpha()
+bush_image_1 = pygame.image.load("sprites\\bush.png").convert_alpha()
+grass_image_1 = pygame.image.load("sprites\\grass.png").convert_alpha()
+dirt_image_1 = pygame.image.load("sprites\\dirt.png").convert_alpha()
+tree_image_1 = pygame.image.load("sprites\\tree.png").convert_alpha()
+rock_image_1 = pygame.image.load("sprites\\rock.png").convert_alpha()
+coin_image_1 = pygame.image.load("sprites\\coin.png").convert_alpha()
+player_image = pygame.image.load("sprites\\player.png").convert_alpha()
+util_bar_image = pygame.image.load("sprites\\util_bar.png").convert_alpha()
 
 
 def draw_rect(cord_x, cord_y, length, width, color):
@@ -98,9 +77,13 @@ class Coin:
         self.cord_y = cord_y
         self.value = value
 
+    # The __eq__ method will return true when compared with anything if this AND that AND that are all true.
+    # For example if compared with another "Coin" it will NOT compare if they're the same object ID (like default),
+    # but will compare if cord_x, cord_y, and value in both objects are the same. If yes, then it returns true.
     def __eq__(self, other):
         return self.cord_x == other.cord_x and self.cord_y == other.cord_y and self.value == other.value
 
+    # When printed, it will output "(1, 3, 10)" instead of "<__main__.Coin object at 0x000001F51B3313A0>"
     def __repr__(self):
         return f"`{self.cord_x, self.cord_y, self.value}`"
 
@@ -112,7 +95,8 @@ class Coin:
 
             player_coins[0] += self.value
 
-            object_array.remove(Coin(self.cord_x, self.cord_y, self.value))
+            # So now this is removing an object with this string value in an array INSTEAD of an actual object!
+            object_array.remove(self)
 
 
 class Obstacle:
@@ -142,8 +126,39 @@ class Obstacle:
             player_cords[0] -= 1
 
 
+class Button:
+    def __init__(self, x, y, width, height, color):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = color
+        self.clicked = False
+        self.rect = pygame.draw.rect(screen, self.color, [self.x*grid_size, self.y*grid_size,
+                                                          self.width, self.height], 300)
+
+    def draw(self):
+        action = False
+
+        pos = pygame.mouse.get_pos()
+
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                self.clicked = True
+                action = True
+
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+
+        pygame.draw.rect(screen, self.color, [self.x * grid_size, self.y * grid_size,
+                                              self.width, self.height], 300)
+
+        return action
+
+
 object_array = [
     Obstacle(2, 2, bush_image_1),
+    Obstacle(4, 4, mushroom_image_1),
     Coin(3, 3, 10),
     Coin(5, 3, 10)
 ]
@@ -153,9 +168,6 @@ mixer.music.load("C:\\Users\\braxt\\Desktop\\Desktop\\Music Catalog\\My Music\\D
 mixer.music.set_volume(0.5)
 
 mixer.music.play()
-
-if mixer.music.get_endevent():
-    mixer.music.play()
 
 running = True
 
@@ -172,8 +184,10 @@ while running:
     # Draw utils
     draw_image(0, 18, util_bar_image)
 
-    # Draw Objects
-    for each in range(0, len(object_array)):
+    # Draw Objects (iterating from last to first. len(object_array) has a "- 1" because there is no
+    # object_array[5] in an array with 5 values. And the ending value is -1 as it is not included
+    # in what ends up being printed)
+    for each in range(len(object_array) - 1, -1, -1):
         object_array[each].draw()
 
     # Text
